@@ -5,6 +5,7 @@ import random
 from django.conf import settings
 from django.core.cache import cache
 from django.http import JsonResponse, HttpResponseRedirect, HttpResponseNotFound
+from django.db.models import Sum
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -43,6 +44,18 @@ def index(request):
     return render(request,'index.html')
 
 redis_conn=redis.Redis.from_url(settings.CACHES['default']['LOCATION'])
+
+@require_http_methods(["GET"])
+def stats_api(request):
+    try:
+        total_urls = ShortURL.objects.count()
+        total_clicks = ShortURL.objects.aggregate(total=Sum('total_dicks'))['total'] or 0
+        return JsonResponse({
+            'total_urls': total_urls,
+            'total_clicks': total_clicks
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 @csrf_exempt
 @require_http_methods(["POST"])

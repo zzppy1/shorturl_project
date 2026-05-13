@@ -1,0 +1,1 @@
+web: gunicorn shorturl_project.wsgi

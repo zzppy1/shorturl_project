@@ -1,31 +1,434 @@
-﻿<!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="zh-CN">
 <head>
-    <title>短链接生成器</title>
-</head>
-<body>
-    <h1>🔗 短链接生成器</h1>
-    <input type="url" id="urlInput" placeholder="请输入长链接" style="width: 400px;">
-    <button onclick="generate()">生成短链接</button>
-    <p>结果：<a id="result" target="_blank"></a></p>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShortURL - 短链接生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <script>
-        async function generate() {
-            const url = document.getElementById('urlInput').value;
-            const resp = await fetch('/api/shorten/', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({url: url})
-            });
-            const data = await resp.json();
-            if (data.short_url) {
-                const resultA = document.getElementById('result');
-                resultA.href = data.short_url;
-                resultA.innerText = data.short_url;
-            } else {
-                alert('错误：' + data.error);
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 15px;
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        h1 {
+            color: #333;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 5px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-icon {
+            padding: 15px;
+            color: #999;
+            font-size: 18px;
+        }
+
+        #urlInput {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 15px 10px;
+            font-size: 15px;
+            outline: none;
+            color: #333;
+        }
+
+        #urlInput::placeholder {
+            color: #bbb;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-container {
+            margin-top: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 12px;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 0.3s ease;
+        }
+
+        .result-container.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .result-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .result-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #result {
+            flex: 1;
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            word-break: break-all;
+            font-weight: 500;
+        }
+
+        #result:hover {
+            text-decoration: underline;
+        }
+
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .copy-btn.copied {
+            background: #4CAF50;
+        }
+
+        .stats {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            padding-top: 25px;
+            border-top: 1px solid #eee;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .error-message {
+            background: #fff5f5;
+            border: 1px solid #ffccc7;
+            color: #ff4d4f;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .stats {
+                gap: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🔗</div>
+            <h1>ShortURL</h1>
+            <p class="subtitle">快速生成短链接，让分享更便捷</p>
+        </div>
+
+        <div class="input-group">
+            <div class="input-wrapper">
+                <span class="input-icon">🔗</span>
+                <input type="url" id="urlInput" placeholder="请输入长链接" required>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="generate()" id="generateBtn">
+            <span>🚀 生成短链接</span>
+        </button>
+
+        <div class="result-container" id="resultContainer">
+            <div class="result-label">✨ 生成成功</div>
+            <div class="result-link">
+                <a id="result" target="_blank"></a>
+                <button class="copy-btn" onclick="copyToClipboard()">📋 复制</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="totalClicks">--</div>
+                <div class="stat-label">总点击量</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalUrls">--</div>
+                <div class="stat-label">短链数量</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlInput = document.getElementById('urlInput');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultA = document.getElementById('result');
+        const generateBtn = document.getElementById('generateBtn');
+
+        async function generate() {
+            const url = urlInput.value.trim();
+            if (!url) {
+                showError('请输入有效的链接地址');
+                return;
+            }
+
+            generateBtn.innerHTML = '<span class="loading"></span><span>生成中...</span>';
+            generateBtn.disabled = true;
+
+            try {
+                const resp = await fetch('/api/shorten/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+                const data = await resp.json();
+
+                if (data.short_url) {
+                    resultA.href = data.short_url;
+                    resultA.innerText = data.short_url;
+                    resultContainer.classList.add('show');
+                    hideError();
+                    loadStats();
+                } else {
+                    showError(data.error || '生成失败，请重试');
+                    resultContainer.classList.remove('show');
+                }
+            } catch (error) {
+                showError('网络错误，请稍后重试');
+                resultContainer.classList.remove('show');
+            } finally {
+                generateBtn.innerHTML = '<span>🚀 生成短链接</span>';
+                generateBtn.disabled = false;
+            }
+        }
+
+        function showError(message) {
+            let errorDiv = document.querySelector('.error-message');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                document.querySelector('.input-group').insertAdjacentElement('beforebegin', errorDiv);
+            }
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            const errorDiv = document.querySelector('.error-message');
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+        }
+
+        async function copyToClipboard() {
+            try {
+                await navigator.clipboard.writeText(resultA.href);
+                const copyBtn = document.querySelector('.copy-btn');
+                copyBtn.textContent = '✓ 已复制';
+                copyBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyBtn.textContent = '📋 复制';
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                alert('复制失败，请手动复制');
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const resp = await fetch('/api/stats/');
+                const data = await resp.json();
+                if (data.total_clicks !== undefined) {
+                    document.getElementById('totalClicks').textContent = formatNumber(data.total_clicks);
+                }
+                if (data.total_urls !== undefined) {
+                    document.getElementById('totalUrls').textContent = formatNumber(data.total_urls);
+                }
+            } catch (error) {
+                console.log('Failed to load stats');
+            }
+        }
+
+        function formatNumber(num) {
+            if (num >= 10000) {
+                return (num / 10000).toFixed(1) + 'w';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'k';
+            }
+            return num.toString();
+        }
+
+        urlInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                generate();
+            }
+        });
+
+        loadStats();
     </script>
 </body>
 </html>

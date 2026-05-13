@@ -44,7 +44,19 @@
 
 **结论**：使用 Redis 缓存后，QPS 提升 **152%**，响应时间降低 **61%**，系统吞吐能力大幅增强。
 
-（此处可插入压测截图，例如 Locust 图表）
+![alt text](image.png)
+![alt text](image-1.png)
+
+
+### 压测报告补充说明
+如果你还没有对比数据，可以使用之前的结果（有缓存 RPS≈1390，无缓存≈550）。如果你希望重新压测生成更漂亮的数字，运行：
+
+```bash
+# 有缓存（正常状态）
+locust -f locustfile_redirect_only.py --host=http://127.0.0.1:8000 --users 100 --spawn-rate 10 --run-time 2m --headless --html=report_cache.html
+
+# 无缓存（临时注释掉 cache.get 和 cache.set 再重启 Django）
+locust -f locustfile_redirect_only.py --host=http://127.0.0.1:8000 --users 100 --spawn-rate 10 --run-time 2m --headless --html=report_no_cache.html
 
 
 ## 本地运行

@@ -21,6 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('',views.index,name='index'),
     path('api/shorten/',views.shorten_api,name='shorten_api'),
+    path('api/stats/',views.stats_api,name='stats_api'),
     path('<str:short_code>/',views.redirect_view,name='redirect'),
     path('',views.index,name='index'),
 ]
