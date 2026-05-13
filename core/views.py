@@ -8,7 +8,7 @@ from django.http import JsonResponse, HttpResponseRedirect, HttpResponseNotFound
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from socketio.base_client import original_signal_handler
+# from socketio.base_client import original_signal_handler
 
 from .models import ShortURL
 from .utils import create_short_link

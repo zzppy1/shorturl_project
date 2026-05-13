@@ -9,6 +9,8 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
+import os
+import dj_database_url
 
 from pathlib import Path
 
@@ -22,13 +24,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-e(*ce&)1dp&ywu!_a*l53#_b@mu9)&$vjmgygs#kgck*veite1'
+# SECRET_KEY = 'django-insecure-e(*ce&)1dp&ywu!_a*l53#_b@mu9)&$vjmgygs#kgck*veite1'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
 
-ALLOWED_HOSTS = []
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-e(*ce&)1dp&ywu!_a*l53#_b@mu9)&$vjmgygs#k')
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
+# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.onrender.com']
 
 # Application definition
 
@@ -42,21 +47,32 @@ INSTALLED_APPS = [
     'core',                 #新增
     'django_redis',         #新增
 ]
+#
+# CACHES={
+#     'default':{
+#         # 用 Redis 做缓存
+#         'BACKEND':'django_redis.cache.RedisCache',
+#         # Redis 地址
+#         'LOCATION':'redis://127.0.0.1:6379/1 ',
+#         # 连接工具
+#         'OPTIONS':{
+#             'CLIENT_CLASS':'django_redis.client.DefaultClient',
+#             'CONNECTION_POOL_KWARGS': {"max_connections":50},
+#             'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
+#             'KEY_PREFIX':'shorturl',
+#         },
+#         'TIMEOUT':3600,
+#     }
+# }
 
-CACHES={
-    'default':{
-        # 用 Redis 做缓存
-        'BACKEND':'django_redis.cache.RedisCache',
-        # Redis 地址
-        'LOCATION':'redis://127.0.0.1:6379/1 ',
-        # 连接工具
-        'OPTIONS':{
-            'CLIENT_CLASS':'django_redis.client.DefaultClient',
-            'CONNECTION_POOL_KWARGS': {"max_connections":50},
-            'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
-            'KEY_PREFIX':'shorturl',
-        },
-        'TIMEOUT':3600,
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
     }
 }
 
@@ -96,20 +112,25 @@ WSGI_APPLICATION = 'shorturl_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'shorturl_db',
+#         'USER': 'root',
+#         'PASSWORD': 'zhouzheng160427',
+#         'HOST': '127.0.0.1',
+#         'PORT': '3306',
+#         'OPTIONS': {
+#             'init_command': 'SET sql_mode="STRICT_TRANS_TABLES"',
+#         }
+#     }
+# }
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'shorturl_db',
-        'USER': 'root',
-        'PASSWORD': 'zhouzheng160427',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-        'OPTIONS': {
-            'init_command': 'SET sql_mode="STRICT_TRANS_TABLES"',
-        }
-    }
+    'default': dj_database_url.config(
+        default='mysql://root:zhouzheng160427@127.0.0.1:3306/shorturl_db',
+        conn_max_age=600
+    )
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
