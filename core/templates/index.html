@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>短链接生成器</title>
+</head>
+<body>
+    <h1>🔗 短链接生成器</h1>
+    <input type="url" id="urlInput" placeholder="请输入长链接" style="width: 400px;">
+    <button onclick="generate()">生成短链接</button>
+    <p>结果：<a id="result" target="_blank"></a></p>
+
+    <script>
+        async function generate() {
+            const url = document.getElementById('urlInput').value;
+            const resp = await fetch('/api/shorten/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({url: url})
+            });
+            const data = await resp.json();
+            if (data.short_url) {
+                const resultA = document.getElementById('result');
+                resultA.href = data.short_url;
+                resultA.innerText = data.short_url;
+            } else {
+                alert('错误：' + data.error);
+            }
+        }
+    </script>
+</body>
+</html>
